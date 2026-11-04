@@ -1,0 +1,16 @@
+================================================================================
+SCRIPT ALPHA v7.0 & DATAVERSE v5.1 — MASTER ARCHITECT SPECIFICATIONS
+================================================================================
+1. CORE ARCHITECTURE:
+   - Pure MX & TRIAD 10-Section Hybrid Schema Engine
+   - Vector Clock Causal Tracking & SHA-256 State Hashing
+   - Strict CLI Payload Rejection (Prohibiting Legacy 4-Part Keys)
+
+2. ACTIVE DAEMON & STORAGE:
+   - Real-time file-watching sync daemon (`auto_watcher.js`)
+   - Sovereign mirror path: /sdcard/Alpha Up2date
+
+3. TEST SUITE & VALIDATION:
+   - Automated whitelist and schema rejection tests (`test_cli_rejection.js`)
+   - 100% test pass confirmation under Termux POSIX Node.js runtime.
+================================================================================

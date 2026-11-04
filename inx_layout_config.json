@@ -1,0 +1,12 @@
+{
+  "version": "5.0",
+  "template": "Original Inx/MX",
+  "layout_directives": [
+    "Semantic Structure & Tokenization",
+    "Single-Container High-Density Layouts",
+    "Zero-Latency Telemetry & Progressive Disclosure",
+    "Predictive, Suggestive Next Steps"
+  ],
+  "engine": "Dataverse Quantum-Mesh & CRDTSyncDaemon",
+  "status": "LOCKED_ACTIVE"
+}

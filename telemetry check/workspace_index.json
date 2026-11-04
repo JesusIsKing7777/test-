@@ -1,0 +1,14 @@
+{
+  "lastIndexed": "2026-11-02T14:32:19.071Z",
+  "engine": "Script Alpha & Dataverse v5.0",
+  "fileCount": 7,
+  "files": [
+    "alpha_v5_master.js",
+    "audit_trigger.txt",
+    "auto_watcher.js",
+    "daemon_test.txt",
+    "live_test.txt",
+    "test_sdcard_export.txt",
+    "watcher_test.txt"
+  ]
+}
