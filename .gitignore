@@ -1,8 +1,12 @@
+# Runtime logs, WAL, audit trails, locks, and sync queues
+*.log
+dataverse_wal.jsonl
+dataverse_audit.jsonl
+dataverse_snapshot.json
+dataverse.lock/
+local_sync/vector_sync_queue.jsonl
+archive/
+archives/
 *.tar.gz
-scheduler.log
-*.tar.gz
-scheduler.log
-auto_watcher.log
-*.tar.gz
-scheduler.log
-auto_watcher.log
+temp_worker_*.js
+.DS_Store
