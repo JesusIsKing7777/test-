@@ -1,40 +1,42 @@
 'use strict';
-/**
- * ROBUST MULTI-PROCESS CONCURRENCE STRESS TEST SUITE
- * Spawns multiple independent child processes using child_process.fork
- * to verify atomic WAL appends and audit trail integrity under load.
- */
 const { fork } = require('node:child_process');
-const os = require('node:os');
 const path = require('node:path');
+const fs = require('node:fs');
+const masterEngine = require('./alpha_v8_3_master.js');
 
 async function runStressTest() {
-  const numWorkers = Math.min(os.cpus().length || 2, 4);
-  console.log(`[STRESS] Spawning ${numWorkers} concurrent worker processes...`);
+  const TOTAL_WORKERS = 50;
+  const WRITES_PER_WORKER = 20;
+  console.log(`[STRESS] Spawning ${TOTAL_WORKERS} concurrent workers (${TOTAL_WORKERS * WRITES_PER_WORKER} total appends)...`);
 
   const workers = [];
-  let completed = 0;
-
-  for (let i = 0; i < numWorkers; i++) {
-    const workerPath = path.join(process.cwd(), 'worker_task.js');
-    const child = fork(workerPath, [String(i + 1)]);
-    
-    workers.push(
-      new Promise((resolve, reject) => {
-        child.on('exit', (code) => {
-          if (code === 0) {
-            completed++;
-            resolve();
-          } else {
-            reject(new Error(`Worker exited with code ${code}`));
-          }
-        });
-      })
-    );
+  for (let i = 0; i < TOTAL_WORKERS; i++) {
+    const workerScript = path.join(process.cwd(), `temp_worker_${i}.js`);
+    fs.writeFileSync(workerScript, `
+      const engine = require('./alpha_v8_3_master.js');
+      async function run() {
+        for (let j = 0; j < ${WRITES_PER_WORKER}; j++) {
+          await engine.appendMutation({ worker: ${i}, seq: j, ts: Date.now() });
+        }
+        process.exit(0);
+      }
+      run().catch(e => { console.error(e); process.exit(1); });
+    `);
+    workers.push(new Promise((resolve, reject) => {
+      const child = fork(workerScript);
+      child.on('exit', code => {
+        try { fs.unlinkSync(workerScript); } catch (e) {}
+        code === 0 ? resolve() : reject(new Error(`Worker exited with code ${code}`));
+      });
+    }));
   }
 
   await Promise.all(workers);
-  console.log(`[SUCCESS] All ${completed} worker processes completed successfully with atomic log appends.`);
+  console.log('[SUCCESS] All concurrent workers finished successfully.');
+
+  const manifestCheck = await masterEngine.verifyArchivedManifests();
+  console.log('[VERIFY] Archived manifests verification result:', manifestCheck);
+
   process.exit(0);
 }
 

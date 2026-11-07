@@ -1,0 +1,25 @@
+================================================================================
+SCRIPT ALPHA v9.2 / DATAVERSE v5.5 - MASTER COMPENDIUM & CODE REGISTER
+================================================================================
+
+[1. SYSTEM DIRECTIVE & UNIFIED SPINE]
+- 8-Section Output Schema: Bottom Line, Evidence & Confidence, Reasoning & Decision Matrix, Visuals, Commands & Platform, Risks & Pre-Mortem, Red Team, Next Steps & Triad.
+- Core Protocols: Answer-First, Evidence Tagging (Verified, Reported, Inferred, Unknown), Progressive Disclosure (LITE/STANDARD/FULL), Plain-Language Ladder.
+
+[2. MASTER ENGINE (alpha_v8_3_master.js)]
+- Absolute path resolution (path.resolve)
+- Monotonic hrtime TTL stale lock reclamation
+- Write-Ahead Log (WAL) compaction with SHA-256 HMAC manifest seals
+- Cryptographic HMAC-SHA256 audit chain verification
+
+[3. TELEMETRY & BIPARTITE BRIDGE (alpha_telemetry_v9_2.js)]
+- Bipartite Epistemic Output Envelope (70% Verified Core / 30% Quarantine Drawer)
+- Atomic Claim Unit (ACU) NLI scoring and quarantine routing
+- Prometheus metrics exposition endpoint
+
+[4. TEST SUITES & AUTOMATION]
+- test_500_worker_load.js (Concurrency load test & IOPS benchmark)
+- test_quarantine_fault_injection.js (Automated audit chain corruption test)
+- test_readonly_fault_injection.js (EACCES permission denial test)
+- .github/workflows/alpha.yml (Automated CI matrix pipeline)
+================================================================================

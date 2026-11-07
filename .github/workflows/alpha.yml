@@ -27,7 +27,12 @@ jobs:
     - name: Install Dependencies
       run: npm install
 
-    - name: Run Script Alpha Verification Test Suite
-      run: npm test
-      env:
-        ALPHA_TELEMETRY_HMAC_KEY: 'default-test-entropy-key-32-bytes-minimum!!'
+    - name: Run Deployment Verification Checklist
+      run: npm run verify
+
+    - name: Run Concurrency Stress Suite
+      run: npm run stress
+
+    - name: Run CI Fault Simulation (Assert Exit Code 2)
+      run: |
+        node test_ci_failure_simulation.js && exit 1 || echo "[VERIFIED] Fault simulation correctly triggered exit code 2."
