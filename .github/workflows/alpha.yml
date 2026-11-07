@@ -1,0 +1,33 @@
+name: Script Alpha v9.2 CI
+
+on:
+  push:
+    branches: [ main, master, v9.2 ]
+  pull_request:
+    branches: [ main, master, v9.2 ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [ 18.x, 20.x ]
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Run Script Alpha Verification Test Suite
+      run: npm test
+      env:
+        ALPHA_TELEMETRY_HMAC_KEY: 'default-test-entropy-key-32-bytes-minimum!!'
