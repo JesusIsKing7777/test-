@@ -1,0 +1,11 @@
+{"sequence":1,"payload":"{\"testChecklist\":true,\"timestamp\":1794030898230}","prevMac":"0000000000000000000000000000000000000000000000000000000000000000","mac":"270129bbbe71c30c84d041bffd5fc29b5ceffe67b97a21a1020ce424a03d0faa"}
+{"sequence":2,"payload":"{\"testChecklist\":true,\"timestamp\":1794030992164}","prevMac":"270129bbbe71c30c84d041bffd5fc29b5ceffe67b97a21a1020ce424a03d0faa","mac":"2c078dd5cc778e0550a4e8ec08d7ed69b2a973e88de7425734b2d9ebf013ffa3"}
+{"key":"probe_1794031482102","value":{"timestamp":"2026-11-07T06:04:42.102Z"}}
+{"key":"probe_1794031555062","value":{"timestamp":"2026-11-07T06:05:55.062Z"}}
+{"key":"probe_1794052686732","value":{"timestamp":"2026-11-07T11:58:06.732Z"}}
+{"key":"probe_1794052767123","value":{"timestamp":"2026-11-07T11:59:27.123Z"}}
+{"key":"probe_1794052767234","value":{"timestamp":"2026-11-07T11:59:27.234Z"}}
+{"key":"probe_1794053208897","value":{"timestamp":"2026-11-07T12:06:48.897Z"}}
+{"key":"probe_1794053308094","value":{"timestamp":"2026-11-07T12:08:28.094Z"}}
+{"sequence":3,"payload":"{\"testChecklist\":true,\"timestamp\":1794053376043}","prevMac":"2c078dd5cc778e0550a4e8ec08d7ed69b2a973e88de7425734b2d9ebf013ffa3","mac":"97a7ecf4d08ea08b12be5c2aa4a913bbcfc9975bb2984d86ede7916a87df8699"}
+{"sequence":4,"payload":"{\"testChecklist\":true,\"timestamp\":1794053404782}","prevMac":"97a7ecf4d08ea08b12be5c2aa4a913bbcfc9975bb2984d86ede7916a87df8699","mac":"2a840b34377d17899e6ace1df2907e618055fb21b8157e55e4a1b77d12084ddf"}

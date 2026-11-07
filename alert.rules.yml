@@ -1,0 +1,22 @@
+groups:
+  - name: alpha_master_engine_alerts
+    rules:
+      - alert: AlphaMasterEngineStuckLock
+        expr: alpha_lock_active == 1
+        for: 1m
+        labels:
+          severity: critical
+          engine: alpha_master_engine
+        annotations:
+          summary: "AlphaMasterEngine advisory lock is stuck locked"
+          description: "The advisory lock file dataverse.lock has remained active for more than 1 minute, indicating a potential deadlock or orphaned process."
+
+      - alert: AlphaMasterEngineWalSpike
+        expr: alpha_wal_bytes > 52428800
+        for: 30s
+        labels:
+          severity: warning
+          engine: alpha_master_engine
+        annotations:
+          summary: "AlphaMasterEngine Write-Ahead Log size spike detected"
+          description: "The Write-Ahead Log (WAL) has exceeded 50MB ({{ $value }} bytes) without compaction."

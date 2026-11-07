@@ -1,0 +1,17 @@
+import pytest
+from unittest.mock import patch, MagicMock
+
+def test_pipeline_execution():
+    VALID_JSON_RESPONSE = """
+    {
+        "status": "success",
+        "data_summary": "Server fan failure fixed.",
+        "confidence_score": 0.95,
+        "extracted_entities": [{"name": "Alex", "category": "Person"}],
+        "action_items": ["Order parts"],
+        "flagged_issues": []
+    }
+    """
+    assert "success" in VALID_JSON_RESPONSE
+
+

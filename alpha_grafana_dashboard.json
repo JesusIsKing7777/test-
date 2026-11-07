@@ -1,0 +1,65 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Engine Uptime",
+      "type": "stat",
+      "targets": [{ "expr": "alpha_engine_uptime_seconds", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "title": "Advisory Lock State",
+      "type": "stat",
+      "targets": [{ "expr": "alpha_lock_active", "refId": "A" }],
+      "fieldConfig": { "defaults": { "mappings": [{ "options": { "0": { "color": "green", "text": "Unlocked" }, "1": { "color": "red", "text": "Locked" } }, "type": "value" }] } }
+    },
+    {
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "title": "Audit Entries Total",
+      "type": "stat",
+      "targets": [{ "expr": "alpha_audit_entries_total", "refId": "A" }]
+    },
+    {
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "title": "WAL Size (Bytes)",
+      "type": "stat",
+      "targets": [{ "expr": "alpha_wal_bytes", "refId": "A" }],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 5,
+      "title": "Memory Footprint (RSS & Heap)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "alpha_process_resident_memory_bytes", "legendFormat": "RSS Memory", "refId": "A" },
+        { "expr": "alpha_process_heap_used_bytes", "legendFormat": "Heap Used", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["alpha", "dataverse", "prometheus"],
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "AlphaMasterEngine Metrics Dashboard",
+  "uid": "alpha_master_engine_v92",
+  "version": 1
+}

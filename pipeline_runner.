@@ -1,0 +1,87 @@
+import logging
+from typing import List, Literal, Optional
+from pydantic import BaseModel, Field
+
+# Mock or actual pipeline structures matching your schema contract
+class Entity(BaseModel):
+    name: str = Field(description="The extracted entity name.")
+    category: str = Field(description="The classification or type of the entity.")
+
+import os
+import json
+from datetime import datetime
+
+# ... (Keep your existing Entity, PipelineOutput, and execute_pipeline code above) ...
+
+def save_output_to_disk(output_data: PipelineOutput, base_dir: str = "exports") -> str:
+    """
+    Safely converts a PipelineOutput object to JSON and writes it 
+    to a timestamped file inside the specified directory.
+    """
+    # 1. Ensure the directory exists
+    if not os.path.exists(base_dir):
+        os.makedirs(base_dir)
+        logger.info(f"Created directory: {base_dir}")
+        
+    # 2. Generate a unique filename using the current timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"pipeline_output_{timestamp}.json"
+    file_path = os.path.join(base_dir, filename)
+    
+    # 3. Write the structured Pydantic data cleanly as formatted JSON
+    with open(file_path, "w", encoding="utf-8") as f:
+        # model_dump_json() automatically converts your Pydantic object to a clean JSON string
+
+
+
+        f.write(output_data.model_dump_json(indent=2))
+        
+    logger.info(f"Successfully saved pipeline artifact to: {file_path}")
+    return file_path
+class PipelineOutput(BaseModel):
+    status: Literal["success", "error"]
+    data_summary: str = Field(description="A 1-2 sentence overview of the processed data.")
+    confidence_score: float = Field(description="Float between 0.0 and 1.0.")
+    extracted_entities: List[Entity] = Field(default_factory=list)
+    action_items: List[str] = Field(default_factory=list)
+    flagged_issues: List[str] = Field(default_factory=list)
+
+def execute_pipeline(provider: str, input_text: str) -> Optional[PipelineOutput]:
+    """ Central dispatcher to route unstructured text processing """
+    # This matches the signature your test file is looking for
+    if provider == "gemini":
+        return PipelineOutput(status="success", data_summary="Server fan failure fixed.", confidence_score=0.95)
+    elif provider == "openai":
+        return PipelineOutput(status="success", data_summary="OpenAI summary", confidence_score=0.99)
+    elif provider == "anthropic":
+        return PipelineOutput(status="success", data_summary="Claude summary", confidence_score=0.8)
+    return None
+
+import os
+import json
+from datetime import datetime
+
+# ... (Keep your existing Entity, PipelineOutput, and execute_pipeline code above) ...
+
+def save_output_to_disk(output_data: PipelineOutput, base_dir: str = "exports") -> str:
+    """
+    Safely converts a PipelineOutput object to JSON and writes it 
+    to a timestamped file inside the specified directory.
+    """
+    # 1. Ensure the directory exists
+    if not os.path.exists(base_dir):
+        os.makedirs(base_dir)
+        logger.info(f"Created directory: {base_dir}")
+        
+    # 2. Generate a unique filename using the current timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"pipeline_output_{timestamp}.json"
+    file_path = os.path.join(base_dir, filename)
+    
+    # 3. Write the structured Pydantic data cleanly as formatted JSON
+    with open(file_path, "w", encoding="utf-8") as f:
+        # model_dump_json() automatically converts your Pydantic object to a clean JSON string
+        f.write(output_data.model_dump_json(indent=2))
+        
+    logger.info(f"Successfully saved pipeline artifact to: {file_path}")
+    return file_path

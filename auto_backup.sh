@@ -6,7 +6,7 @@ STORAGE_DIR="/sdcard/Alpha Up2date"
 TELEMETRY_DIR="$WORKSPACE/telemetry check"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_NAME="alpha_backup_${TIMESTAMP}.tar.gz"
-BACKUP_PATH="$WORKSPACE/$BACKUP_NAME"
+BACKUP_PATH="$HOME/$BACKUP_NAME"
 
 echo "================================================================================"
 echo "[Script Alpha v7.0] Initializing Automated Workspace Backup..."

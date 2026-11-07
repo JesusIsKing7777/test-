@@ -1,0 +1,24 @@
+{
+  "name": "script-alpha-master-engine",
+  "version": "9.2.0",
+  "description": "Script Alpha v9.2 Unified Spine & Dataverse v5.5 Storage Engine",
+  "main": "alpha_v8_3_master.js",
+  "scripts": {
+    "verify": "node verify_deployment_v9_2.js",
+    "stress": "node test_500_worker_load.js",
+    "fault": "node test_quarantine_fault_injection.js",
+    "test": "npm run verify && npm run fault"
+  },
+  "keywords": [
+    "alpha",
+    "dataverse",
+    "telemetry",
+    "bipartite",
+    "monotonic-ttl"
+  ],
+  "author": "Two-Way AI Accelerator",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
