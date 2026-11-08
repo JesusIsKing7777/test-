@@ -16,11 +16,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: |
+      - name: Install CPU PyTorch and ONNX dependencies
+        run: |
           python3 -m pip install --upgrade pip
-          pip install torch transformers "optimum[onnxruntime]" onnxruntime tokenizers
-          python3 models/export_minilm_int4.py --out-dir models --no-coreml
-          python3 models/verify_minilm_worker.py
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install transformers "optimum[onnxruntime]" onnxruntime tokenizers
+      - name: Export INT4 ONNX model and tokenizer
+        run: python3 models/export_minilm_int4.py --out-dir models --no-coreml
+      - name: Verify ONNX MiniLM worker
+        run: python3 models/verify_minilm_worker.py
+      - name: Package and SHA-256 hash ONNX bundle
+        run: |
           tar -czvf alpha_models_v92.tar.gz -C models minilm_l6_v2_int4.onnx tokenizer.json vocab.txt label_map.json
           sha256sum alpha_models_v92.tar.gz > alpha_models_v92.tar.gz.sha256
       - uses: actions/upload-artifact@v4
@@ -38,10 +44,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: |
+      - name: Install macOS export dependencies
+        run: |
           python3 -m pip install --upgrade pip
           pip install torch transformers "optimum[onnxruntime]" onnxruntime tokenizers coremltools
-          python3 models/export_minilm_int4.py --out-dir models
+      - name: Export CoreML and ONNX models
+        run: python3 models/export_minilm_int4.py --out-dir models
+      - name: Package CoreML bundle
+        run: |
           tar -czvf alpha_models_v92_coreml.tar.gz -C models MiniLML6NLI.mlpackage label_map.json
           shasum -a 256 alpha_models_v92_coreml.tar.gz > alpha_models_v92_coreml.tar.gz.sha256
       - uses: actions/upload-artifact@v4

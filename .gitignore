@@ -22,3 +22,6 @@ __pycache__/
 downloads_ref/
 .venv*/
 *.sha256
+check_ci_v92.sh
+fetch_ubuntu_log.sh
+inspect_ci_fail.sh
