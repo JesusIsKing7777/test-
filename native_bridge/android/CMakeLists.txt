@@ -1,30 +1,14 @@
 cmake_minimum_required(VERSION 3.22.1)
-project("alpha_mmap_arena" LANGUAGES CXX)
-
+project(alpha_mmap_arena LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-add_library(
-    alpha_mmap_arena
-    SHARED
-    alpha_mmap_arena_jni.cpp
-)
-
-target_compile_options(
-    alpha_mmap_arena
-    PRIVATE
-    -O3
-    -Wall
-    -Wextra
-    -fvisibility=hidden
-    -D_FILE_OFFSET_BITS=64
-)
-
+add_library(alpha_mmap_arena SHARED alpha_mmap_arena_jni.cpp)
+target_compile_options(alpha_mmap_arena PRIVATE -O3 -fvisibility=hidden)
+if(DEFINED ORT_ANDROID_DIR AND EXISTS "${ORT_ANDROID_DIR}/headers/onnxruntime_cxx_api.h")
+  target_compile_definitions(alpha_mmap_arena PRIVATE ALPHA_HAS_ORT=1)
+  target_include_directories(alpha_mmap_arena PRIVATE "${ORT_ANDROID_DIR}/headers")
+  target_link_libraries(alpha_mmap_arena PRIVATE "${ORT_ANDROID_DIR}/jni/${ANDROID_ABI}/libonnxruntime.so")
+endif()
 find_library(log-lib log)
-find_library(android-lib android)
-
-target_link_libraries(
-    alpha_mmap_arena
-    ${log-lib}${android-lib}
-)
+if(log-lib)
+  target_link_libraries(alpha_mmap_arena PRIVATE ${log-lib})
+endif()

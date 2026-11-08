@@ -1,19 +1,14 @@
-// [CONVERGE 1a + 2b] Kotlin ExecuTorch Shared-Arena Bridge & LMKD Memory Guard
 package ai.alpha.bridge
 
 import android.app.ActivityManager
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import org.json.JSONObject
+import java.io.File
 import java.util.concurrent.Executors
 
-data class RetroactiveNliVerdict(
-    val acuId: String,
-    val pContra: Double,
-    val pNeutral: Double,
-    val pEntail: Double,
-    val vetoTripped: Boolean
-)
+data class RetroactiveNliVerdict(val acuId: String, val pContra: Double, val pNeutral: Double, val pEntail: Double, val vetoTripped: Boolean, val backend: String)
 
 interface BottomQuarantineDrawerListener {
     fun onAcuStreamed(acuId: String, text: String, auditState: String)
@@ -22,19 +17,18 @@ interface BottomQuarantineDrawerListener {
 
 class AlphaExecuTorchBridge(private val context: Context) {
     companion object {
-        init {
-            System.loadLibrary("alpha_mmap_arena")
-        }
+        init { System.loadLibrary("alpha_mmap_arena") }
         private const val MIN_LMKD_HEADROOM_MB = 400L
         private const val CONTRADICTION_VETO = 0.35
     }
 
     private external fun nativeInitMmapArena(weightsPath: String): Long
+    private external fun nativeInitNliModel(handle: Long, onnxPath: String, vocabPath: String, labelIdx: IntArray): Boolean
+    private external fun nativeScoreNli(handle: Long, premise: String, hypothesis: String): DoubleArray
     private external fun nativeReleaseMmapArena(arenaHandle: Long)
 
     private var arenaHandle: Long = 0L
-    // Single-process single-thread executor replaces 500 Node.js child_process forks
-    private val singleProcessWalAndNliExecutor = Executors.newSingleThreadExecutor()
+    private val worker = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
     var drawerListener: BottomQuarantineDrawerListener? = null
 
@@ -45,41 +39,37 @@ class AlphaExecuTorchBridge(private val context: Context) {
         return info.availMem / (1024L * 1024L)
     }
 
-    fun initializeArena(pteWeightsPath: String): Boolean {
-        if (availableSystemRamMb() < MIN_LMKD_HEADROOM_MB) {
-            return false
+    private fun parseLabelIndices(labelMapPath: String?): IntArray {
+        if (labelMapPath.isNullOrBlank()) return intArrayOf(0, 1, 2)
+        return try {
+            val id2l = JSONObject(File(labelMapPath).readText()).getJSONObject("id2label")
+            var c = 0; var n = 1; var e = 2
+            id2l.keys().forEach { k ->
+                val idx = k.toInt(); val v = id2l.getString(k).lowercase()
+                when { "contra" in v || v == "label_0" -> c = idx; "neut" in v || v == "label_1" -> n = idx; "entail" in v || v == "label_2" -> e = idx }
+            }
+            intArrayOf(c, n, e)
+        } catch (_: Exception) { intArrayOf(0, 1, 2) }
+    }
+
+    fun initializeArena(ptePath: String, onnxPath: String? = null, vocabPath: String? = null, labelMapPath: String? = null): Boolean {
+        if (availableSystemRamMb() < MIN_LMKD_HEADROOM_MB) return false
+        arenaHandle = nativeInitMmapArena(ptePath)
+        if (arenaHandle != 0L && onnxPath != null && vocabPath != null) {
+            nativeInitNliModel(arenaHandle, onnxPath, vocabPath, parseLabelIndices(labelMapPath))
         }
-        arenaHandle = nativeInitMmapArena(pteWeightsPath)
         return arenaHandle != 0L
     }
 
-    fun streamAndAuditAcu(acuId: String, text: String, requiresNli: Boolean) {
-        drawerListener?.onAcuStreamed(
-            acuId = acuId,
-            text = text,
-            auditState = if (requiresNli) "PENDING_AUDIT" else "BYPASSED_LOW_RISK"
-        )
+    fun streamAndAuditAcu(acuId: String, premise: String, hypothesis: String, requiresNli: Boolean) {
+        drawerListener?.onAcuStreamed(acuId, hypothesis, if (requiresNli) "PENDING_AUDIT" else "BYPASSED_LOW_RISK")
         if (!requiresNli || arenaHandle == 0L) return
-
-        singleProcessWalAndNliExecutor.execute {
-            val pContra = if (text.contains("500 child_process", ignoreCase = true)) 0.92 else 0.02
-            val pEntail = 1.0 - pContra - 0.03
-            val verdict = RetroactiveNliVerdict(
-                acuId = acuId,
-                pContra = pContra,
-                pNeutral = 0.03,
-                pEntail = pEntail,
-                vetoTripped = pContra >= CONTRADICTION_VETO
-            )
+        worker.execute {
+            val s = nativeScoreNli(arenaHandle, premise, hypothesis)
+            val verdict = RetroactiveNliVerdict(acuId, s[0], s[1], s[2], s[0] >= CONTRADICTION_VETO, if (s[3] >= 0.5) "ANDROID_NDK_ORT" else "NDK_FALLBACK")
             mainHandler.post { drawerListener?.onAcuNliResolved(verdict) }
         }
     }
 
-    fun shutdown() {
-        singleProcessWalAndNliExecutor.shutdown()
-        if (arenaHandle != 0L) {
-            nativeReleaseMmapArena(arenaHandle)
-            arenaHandle = 0L
-        }
-    }
+    fun shutdown() { worker.shutdown(); if (arenaHandle != 0L) { nativeReleaseMmapArena(arenaHandle); arenaHandle = 0L } }
 }
