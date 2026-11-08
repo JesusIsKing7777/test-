@@ -1,38 +1,53 @@
-name: Script Alpha v9.2 CI
+name: Script Alpha v9.2 Dual-OS CI
 
 on:
   push:
-    branches: [ main, master, v9.2 ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master, v9.2 ]
+    branches: [ main ]
 
 jobs:
-  test:
+  ubuntu-hybrid-spine:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         node-version: [ 18.x, 20.x ]
-
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify C++ compiler & run full v9.2 suite (CI strict)
+        env:
+          CI: 'true'
+          ALPHA_TELEMETRY_HMAC_KEY: 'ci-matrix-32-byte-hmac-test-key!'
+        run: |
+          g++ --version
+          bash run_full_v92_suite.sh
 
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-
-    - name: Install Dependencies
-      run: npm install
-
-    - name: Run Deployment Verification Checklist
-      run: npm run verify
-
-    - name: Run Concurrency Stress Suite
-      run: npm run stress
-
-    - name: Run CI Fault Simulation (Assert Exit Code 2)
-      run: |
-        node test_ci_failure_simulation.js && exit 1 || echo "[VERIFIED] Fault simulation correctly triggered exit code 2."
+  macos-coreml-wordpiece:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build & run CoreMLBridge + WordPieceParityTests via SwiftPM
+        run: |
+          PKG="$RUNNER_TEMP/CoreMLTestPkg"
+          mkdir -p "$PKG/Sources/CoreMLBridge" "$PKG/Tests/CoreMLBridgeTests"
+          cp native_bridge/ios/CoreMLBridge.swift "$PKG/Sources/CoreMLBridge/"
+          printf 'import CoreMLBridge\n' | cat - native_bridge/ios/Tests/WordPieceParityTests.swift > "$PKG/Tests/CoreMLBridgeTests/WordPieceParityTests.swift"
+          cat << 'PKG_EOF' > "$PKG/Package.swift"
+          // swift-tools-version: 5.9
+          import PackageDescription
+          let package = Package(
+              name: "CoreMLBridge",
+              platforms: [.macOS(.v13)],
+              targets: [
+                  .target(name: "CoreMLBridge"),
+                  .testTarget(name: "CoreMLBridgeTests", dependencies: ["CoreMLBridge"])
+              ]
+          )
+          PKG_EOF
+          swift test --package-path "$PKG"

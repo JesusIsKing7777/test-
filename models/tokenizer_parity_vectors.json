@@ -1,0 +1,22 @@
+[
+  {"id": 1, "text": "Hello, world!", "basicTokens": ["hello", ",", "world", "!"]},
+  {"id": 2, "text": "Can't bypass NLI.", "basicTokens": ["can", "'", "t", "bypass", "nli", "."]},
+  {"id": 3, "text": "Won't fail-over?", "basicTokens": ["won", "'", "t", "fail", "-", "over", "?"]},
+  {"id": 4, "text": "Llama-3-3B INT4 uses 1.72 GB.", "basicTokens": ["llama", "-", "3", "-", "3b", "int4", "uses", "1", ".", "72", "gb", "."]},
+  {"id": 5, "text": "P(Contradiction) >= 0.35.", "basicTokens": ["p", "(", "contradiction", ")", ">", "=", "0", ".", "35", "."]},
+  {"id": 6, "text": "3.1 ms P99 latency.", "basicTokens": ["3", ".", "1", "ms", "p99", "latency", "."]},
+  {"id": 7, "text": "HMAC-SHA256 verified!", "basicTokens": ["hmac", "-", "sha256", "verified", "!"]},
+  {"id": 8, "text": "500 child_process workers", "basicTokens": ["500", "child", "_", "process", "workers"]},
+  {"id": 9, "text": "Zero-dependency C++20/JNI", "basicTokens": ["zero", "-", "dependency", "c", "+", "+", "20", "/", "jni"]},
+  {"id": 10, "text": "4,096 MB total RAM", "basicTokens": ["4", ",", "096", "mb", "total", "ram"]},
+  {"id": 11, "text": "ssh.github.com:443", "basicTokens": ["ssh", ".", "github", ".", "com", ":", "443"]},
+  {"id": 12, "text": "OOM kill at 2.2GB", "basicTokens": ["oom", "kill", "at", "2", ".", "2gb"]},
+  {"id": 13, "text": "70/30 quarantine split", "basicTokens": ["70", "/", "30", "quarantine", "split"]},
+  {"id": 14, "text": "SQLite WAL + USearch", "basicTokens": ["sqlite", "wal", "+", "usearch"]},
+  {"id": 15, "text": "Don't drop ACU-9!", "basicTokens": ["don", "'", "t", "drop", "acu", "-", "9", "!"]},
+  {"id": 16, "text": "[CLS] premise [SEP]", "basicTokens": ["[", "cls", "]", "premise", "[", "sep", "]"]},
+  {"id": 17, "text": "Cost: $5.00/day max", "basicTokens": ["cost", ":", "$", "5", ".", "00", "/", "day", "max"]},
+  {"id": 18, "text": "Wi-Fi only sync (5a)", "basicTokens": ["wi", "-", "fi", "only", "sync", "(", "5a", ")"]},
+  {"id": 19, "text": "INT4 vs. FP16", "basicTokens": ["int4", "vs", ".", "fp16"]},
+  {"id": 20, "text": "All 4 checks passed.", "basicTokens": ["all", "4", "checks", "passed", "."]}
+]

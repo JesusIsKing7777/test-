@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, json, math, os, re, time
+import argparse, json, math, os, re, sys, time
 
 FACT_RE = re.compile(r"(\b\d+(?:\.\d+)?\s*(?:%|ms|gb|mb|kb|usd|\$|s|x)\b|\b(?:19|20)\d{2}\b|\b(?:verified|proves|always|never|sha256|hmac)\b)", re.I)
 HIGH_RE = re.compile(r"\b(medical|dosage|legal|contract|financial|transfer|delete|rm\s+-rf|oom|lmkd|security|key)\b", re.I)
@@ -10,6 +10,24 @@ def softmax_3(logits):
     exps = [math.exp(x - m) for x in logits]
     s = sum(exps)
     return [e / s for e in exps]
+
+def load_label_indices(path="models/label_map.json"):
+    if not os.path.exists(path):
+        return (0, 1, 2)
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            id2label = json.load(f).get("id2label", {})
+        c = n = e = None
+        for k, v in id2label.items():
+            idx, lbl = int(k), str(v).lower()
+            if "contra" in lbl or lbl == "label_0": c = idx
+            elif "neut" in lbl or lbl == "label_1": n = idx
+            elif "entail" in lbl or lbl == "label_2": e = idx
+        if None not in (c, n, e) and len({c, n, e}) == 3:
+            return (c, n, e)
+    except Exception:
+        pass
+    return (0, 1, 2)
 
 class MobileMemoryArenaGuard:
     def __init__(self, total_ram_mb=4096, free_ram_mb=None):
@@ -26,8 +44,9 @@ class MobileMemoryArenaGuard:
         }
 
 class OnnxMiniLmNliScorer:
-    def __init__(self, model="models/minilm_l6_v2_int4.onnx", tok="models/tokenizer.json"):
+    def __init__(self, model="models/minilm_l6_v2_int4.onnx", tok="models/tokenizer.json", label_map="models/label_map.json"):
         self.session = self.tokenizer = None
+        self.label_indices = load_label_indices(label_map)
         self.backend = "CALIBRATED_FALLBACK"
         if os.path.exists(model) and os.path.exists(tok):
             try:
@@ -47,16 +66,17 @@ class OnnxMiniLmNliScorer:
             inp = {"input_ids": [enc.ids], "attention_mask": [enc.attention_mask]}
             if any(i.name == "token_type_ids" for i in self.session.get_inputs()):
                 inp["token_type_ids"] = [enc.type_ids]
-            return softmax_3([float(x) for x in self.session.run(None, inp)[0][0][:3]]), self.backend
+            raw = [float(x) for x in self.session.run(None, inp)[0][0][:3]]
+            return softmax_3([raw[i] for i in self.label_indices]), self.backend
         low = hyp.lower()
         logits = [3.6, 0.4, -1.8] if any(k in low for k in ("128.0 mb", "500 child_process", "corrupt", "unsafe")) else [-2.2, 0.1, 3.9]
         return softmax_3(logits), self.backend
 
 class SemanticRouterClassifier:
-    def __init__(self, veto=0.35, tau=0.85, free_ram_mb=None):
+    def __init__(self, veto=0.35, tau=0.85, free_ram_mb=None, label_map="models/label_map.json"):
         self.veto, self.tau = veto, tau
         self.arena = MobileMemoryArenaGuard(4096, free_ram_mb)
-        self.nli = OnnxMiniLmNliScorer()
+        self.nli = OnnxMiniLmNliScorer(label_map=label_map)
 
     def evaluate_acu(self, text, flags=None, boost=0.0, premise=""):
         t0, flags = time.perf_counter(), (flags or [])
@@ -70,6 +90,7 @@ class SemanticRouterClassifier:
             "text": text, "domainRiskFlags": flags, "riskScore": risk,
             "route": "FAST_STREAM_BYPASS_NLI" if bypass else "STREAM_PLUS_ASYNC_NLI",
             "bypassNli": bypass, "gateLatencyMs": round((time.perf_counter() - t0) * 1000.0, 3),
+            "labelIndices": list(self.nli.label_indices),
             "memoryArena": self.arena.check_lmkd_headroom()
         }
         if bypass:
@@ -81,12 +102,30 @@ class SemanticRouterClassifier:
         badge = "[Quarantined - Contradiction Veto]" if veto_hit else ("[Inferred - Low Entailment]" if pe < self.tau else "[Reported]")
         return {**base, "nliExecuted": True, "inferenceBackend": backend, "probs": {"contra": pc, "neutral": pn, "entail": pe}, "vetoTripped": veto_hit, "uiTarget": target, "badge": badge}
 
+def run_worker_loop():
+    cached_router = SemanticRouterClassifier()
+    for raw_line in sys.stdin:
+        line = raw_line.strip()
+        if not line: continue
+        req_id = None
+        try:
+            d = json.loads(line)
+            req_id = d.get("id")
+            r = cached_router if (d.get("freeRamMb") is None and not d.get("labelMapPath")) else SemanticRouterClassifier(free_ram_mb=d.get("freeRamMb"), label_map=d.get("labelMapPath", "models/label_map.json"))
+            res = r.evaluate_acu(d.get("text", ""), d.get("domainRiskFlags", []), d.get("pillRiskBoost", 0.0), d.get("premise", ""))
+            print(json.dumps({"id": req_id, "ok": True, "result": res}), flush=True)
+        except Exception as exc:
+            print(json.dumps({"id": req_id, "ok": False, "error": str(exc)}), flush=True)
+
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--eval-json", default=None)
+    p.add_argument("--worker", action="store_true")
     a = p.parse_args()
-    if a.eval_json:
+    if a.worker:
+        run_worker_loop()
+    elif a.eval_json:
         d = json.loads(a.eval_json)
-        print(json.dumps(SemanticRouterClassifier(free_ram_mb=d.get("freeRamMb")).evaluate_acu(d.get("text", ""), d.get("domainRiskFlags", []), d.get("pillRiskBoost", 0.0), d.get("premise", ""))))
+        print(json.dumps(SemanticRouterClassifier(free_ram_mb=d.get("freeRamMb"), label_map=d.get("labelMapPath", "models/label_map.json")).evaluate_acu(d.get("text", ""), d.get("domainRiskFlags", []), d.get("pillRiskBoost", 0.0), d.get("premise", ""))))
     else:
         print(json.dumps(SemanticRouterClassifier().evaluate_acu("Llama-3-3B INT4 uses 1.72 GB mmap memory.", ["STRICT_NUMERIC_NLI"], 0.30), indent=2))

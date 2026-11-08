@@ -1,12 +1,18 @@
-# Runtime logs, WAL, audit trails, locks, and sync queues
 *.log
 dataverse_wal.jsonl
 dataverse_audit.jsonl
 dataverse_snapshot.json
 dataverse.lock/
 local_sync/vector_sync_queue.jsonl
+local_sync/vector_sync_ack.jsonl
+local_sync/.sync_queue.lock/
+models/_fp32_tmp/
+models/*.onnx
+models/*.mlpackage/
 archive/
 archives/
 *.tar.gz
+*.tmp
 temp_worker_*.js
+alpha_arena_smoke
 .DS_Store
