@@ -16,3 +16,7 @@ archives/
 temp_worker_*.js
 alpha_arena_smoke
 .DS_Store
+
+__pycache__/
+*.pyc
+downloads_ref/
