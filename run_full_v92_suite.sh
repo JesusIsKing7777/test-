@@ -9,23 +9,24 @@ CORE_FILES=(
   ui_controller/bottom_quarantine_drawer_controller.js native_bridge/ios/CoreMLBridge.swift
   models/export_minilm_int4.py models/verify_minilm_worker.py
 )
+MISSING=()
 for f in "${CORE_FILES[@]}"; do
-  [ -s "$f" ] || { echo "[FAIL] Missing or 0-byte file: $f"; exit 1; }
+  [ -s "$f" ] || MISSING+=("$f")
 done
+if [ "${#MISSING[@]}" -gt 0 ]; then
+  printf '[FAIL] Missing or 0-byte file: %s\n' "${MISSING[@]}"
+  exit 1
+fi
 
 node -e "
-for (const f of [
+const mods = [
   './input_intent_compiler_v92.js', './semantic_router_bridge.js', './omnisync_router.js',
   './local_sync/event_sourcing_queue.js', './telemetry_sync_bridge_v92.js',
   './ui_controller/bottom_quarantine_drawer_controller.js'
-]) {
-  const mod = require(f);
-  if (typeof mod !== 'function') {
-    console.error('[FAIL] Export is not a constructor:', f, typeof mod);
-    process.exit(1);
-  }
-}
-console.log('[OK] All 6 core JS constructors verified non-empty.');
+];
+const bad = mods.filter(f => typeof require(f) !== 'function');
+if (bad.length) { console.error('[FAIL] Not constructor:', bad.join(', ')); process.exit(1); }
+console.log('[OK] All 6 core JS constructors verified.');
 "
 
 node -c input_intent_compiler_v92.js semantic_router_bridge.js omnisync_router.js \
