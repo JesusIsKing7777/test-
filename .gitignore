@@ -20,3 +20,5 @@ alpha_arena_smoke
 __pycache__/
 *.pyc
 downloads_ref/
+.venv*/
+*.sha256

@@ -1,0 +1,60 @@
+name: Export MiniLM-L6 INT4 Models
+
+on:
+  workflow_dispatch:
+    inputs:
+      include_coreml:
+        description: "Also build iOS CoreML .mlpackage on macos-latest (10x mins)"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  export-onnx-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install ONNX export dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install torch transformers "optimum[onnxruntime]" onnxruntime tokenizers
+      - name: Export INT4 ONNX and verify worker
+        run: |
+          python3 models/export_minilm_int4.py --out-dir models --no-coreml
+          python3 models/verify_minilm_worker.py
+          tar -czvf alpha_models_v92.tar.gz -C models \
+            minilm_l6_v2_int4.onnx tokenizer.json vocab.txt label_map.json
+          sha256sum alpha_models_v92.tar.gz > alpha_models_v92.tar.gz.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alpha-models-v92-onnx
+          path: |
+            alpha_models_v92.tar.gz
+            alpha_models_v92.tar.gz.sha256
+
+  export-coreml-macos:
+    if: ${{ inputs.include_coreml == true }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install ONNX + CoreML dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install torch transformers "optimum[onnxruntime]" onnxruntime tokenizers coremltools
+      - name: Export CoreML mlpackage
+        run: |
+          python3 models/export_minilm_int4.py --out-dir models
+          tar -czvf alpha_models_v92_coreml.tar.gz -C models MiniLML6NLI.mlpackage label_map.json
+          shasum -a 256 alpha_models_v92_coreml.tar.gz > alpha_models_v92_coreml.tar.gz.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alpha-models-v92-coreml
+          path: |
+            alpha_models_v92_coreml.tar.gz
+            alpha_models_v92_coreml.tar.gz.sha256
