@@ -10,7 +10,7 @@ on:
 
 jobs:
   export-onnx-ubuntu:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -18,7 +18,6 @@ jobs:
           python-version: '3.11'
       - name: Install CPU PyTorch and ONNX dependencies
         run: |
-          python3 -m pip install --upgrade pip
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install transformers "optimum[onnxruntime]" onnxruntime tokenizers
       - name: Export INT4 ONNX model and tokenizer
@@ -46,7 +45,6 @@ jobs:
           python-version: '3.11'
       - name: Install macOS export dependencies
         run: |
-          python3 -m pip install --upgrade pip
           pip install torch transformers "optimum[onnxruntime]" onnxruntime tokenizers coremltools
       - name: Export CoreML and ONNX models
         run: python3 models/export_minilm_int4.py --out-dir models
